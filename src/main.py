@@ -39,6 +39,10 @@ def main() -> None:
             "Deep Intense Rock",
             {"genre": "rock", "mood": "intense", "energy": 0.92},
         ),
+        (
+            "Edge Case: High-Energy but Sad (conflicting preferences)",
+            {"genre": "ambient", "mood": "sad", "energy": 0.90},
+        ),
     ]
 
     for name, prefs in profiles:

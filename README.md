@@ -10,6 +10,10 @@ The goal is to understand how real platforms like Spotify translate raw data (so
 
 ## How The System Works
 
+### Real-World Recommendation Systems
+
+Real platforms like Spotify use two main approaches. **Collaborative filtering** ignores the song itself and looks at what *other users* with similar listening histories enjoyed — if thousands of people who liked Song A also loved Song B, Spotify recommends B to you. **Content-based filtering** does the opposite: it ignores other users entirely and compares the *attributes of songs* (genre, tempo, mood, energy) directly to your stated or inferred preferences. Most production systems combine both into a hybrid. This simulation focuses purely on content-based filtering — it scores each song's attributes against a user taste profile and returns the best matches. The tradeoff is that it can explain every recommendation clearly but cannot discover unexpected connections the way collaborative filtering can.
+
 ### Song Features
 
 Each `Song` object stores ten attributes read from `data/songs.csv`:
@@ -192,6 +196,35 @@ Loaded 20 songs.
      Genre: hip-hop  |  Mood: intense  |  Energy: 0.88
      Score: 1.96
      Why:   mood match: intense (+1.0); energy proximity: 0.96
+
+====================================================
+  Profile: Edge Case: High-Energy but Sad (conflicting preferences)
+====================================================
+
+  1. Spacewalk Thoughts  by Orbit Bloom
+     Genre: ambient  |  Mood: chill  |  Energy: 0.28
+     Score: 2.38
+     Why:   genre match: ambient (+2.0); energy proximity: 0.38
+
+  2. Ocean Meditation  by Tidal Drift
+     Genre: ambient  |  Mood: peaceful  |  Energy: 0.22
+     Score: 2.32
+     Why:   genre match: ambient (+2.0); energy proximity: 0.32
+
+  3. Storm Runner  by Voltline
+     Genre: rock  |  Mood: intense  |  Energy: 0.91
+     Score: 0.99
+     Why:   energy proximity: 0.99
+
+  4. Trap Kingdom  by StreetWave
+     Genre: hip-hop  |  Mood: intense  |  Energy: 0.88
+     Score: 0.98
+     Why:   energy proximity: 0.98
+
+  5. Gym Hero  by Max Pulse
+     Genre: pop  |  Mood: intense  |  Energy: 0.93
+     Score: 0.97
+     Why:   energy proximity: 0.97
 ```
 
 ---
@@ -215,6 +248,14 @@ Top results were "Sunrise City" and "Gym Hero" — both pop tracks. This makes s
 "Storm Runner" scored 3.99, nearly a perfect score. The second recommendation was "Roaring Sunrise" — also rock but with a happy mood — ranked higher than intense non-rock songs purely because of the genre bonus.
 
 **Observation:** A rock-happy song beats an intense-metal song because genre matters more than mood in the current weights.
+
+### Edge Case — High-Energy Ambient + Sad (conflicting preferences)
+
+Profile: genre="ambient", mood="sad", energy=0.90
+
+This is an adversarial profile designed to "trick" the system. Ambient music in the catalog is typically quiet (energy 0.22–0.28), so asking for ambient + high-energy is internally contradictory. The system surfaced the two ambient songs at the top (scores 2.38 and 2.32) because genre weight (+2.0) dominated everything. Both recommended songs had energy below 0.30 — the complete opposite of what the user wanted. Songs 3–5 were high-energy but had no genre or mood match, scoring only ~0.97–0.99.
+
+**Finding:** When a user's genre preference conflicts with their energy preference, genre always wins under the current weights. The system cannot resolve conflicting signals — it just picks the highest scorer, even if the result is nonsensical.
 
 ### Weight-Shift Experiment
 
